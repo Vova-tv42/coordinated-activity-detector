@@ -1,0 +1,36 @@
+app = 'coordination-detector'
+primary_region = 'fra'
+swap_size_mb = 512
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  DATABASE_PATH = '/data/coordination.db'
+  IDLE_TIMEOUT_MINUTES = '15'
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_start_machines = true
+  # The app exits by itself after IDLE_TIMEOUT_MINUTES, Fly Proxy's own idle check is too short for background analysis
+  auto_stop_machines = 'off'
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = 'requests'
+    soft_limit = 100
+    hard_limit = 150
+
+[mounts]
+  source = 'coordination_data'
+  destination = '/data'
+  initial_size = '1gb'
+
+# A clean exit (code 0) after idle keeps the machine stopped until the next request wakes it
+[[restart]]
+  policy = 'on-failure'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '256mb'

@@ -1,4 +1,9 @@
-app = 'coordination-detector'
+# fly.toml app configuration file generated for coordinated-activity-detector on 2026-11-05T21:58:38Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'coordinated-activity-detector'
 primary_region = 'fra'
 swap_size_mb = 512
 
@@ -6,29 +11,27 @@ swap_size_mb = 512
   dockerfile = 'Dockerfile'
 
 [env]
+  AUTH_TRUST_HOST = 'true'
   DATABASE_PATH = '/data/coordination.db'
   IDLE_TIMEOUT_MINUTES = '15'
-  AUTH_TRUST_HOST = 'true'
 
-[http_service]
-  internal_port = 3000
-  force_https = true
-  auto_start_machines = true
-  # The app exits by itself after IDLE_TIMEOUT_MINUTES, Fly Proxy's own idle check is too short for background analysis
-  auto_stop_machines = 'off'
-  min_machines_running = 0
-
-  [http_service.concurrency]
-    type = 'requests'
-    soft_limit = 100
-    hard_limit = 150
-
-[mounts]
+[[mounts]]
   source = 'coordination_data'
   destination = '/data'
   initial_size = '1gb'
 
-# A clean exit (code 0) after idle keeps the machine stopped until the next request wakes it
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = 'requests'
+    hard_limit = 150
+    soft_limit = 100
+
 [[restart]]
   policy = 'on-failure'
 

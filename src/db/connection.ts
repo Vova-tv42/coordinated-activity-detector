@@ -1,7 +1,8 @@
 import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import Database from 'better-sqlite3';
 import { type BetterSQLite3Database, drizzle } from 'drizzle-orm/better-sqlite3';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from './schema';
 
 const LOCAL_DATABASE_PATH = './data/local.db';
@@ -28,4 +29,8 @@ const globalForDatabase = globalThis as typeof globalThis & {
 export function getDatabase() {
   globalForDatabase.database ??= openDatabase(resolveDatabasePath());
   return globalForDatabase.database;
+}
+
+export function migrateDatabase() {
+  migrate(getDatabase(), { migrationsFolder: join(process.cwd(), 'drizzle') });
 }

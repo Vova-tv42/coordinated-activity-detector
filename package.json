@@ -13,13 +13,15 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "set-webhook": "bun scripts/set-webhook.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
     "drizzle-orm": "^0.45.4",
+    "grammy": "1.46.0",
     "lucide-react": "^1.68.0",
     "next": "16.4.5",
     "next-auth": "5.0.0-beta.32",

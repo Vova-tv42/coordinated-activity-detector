@@ -17,6 +17,7 @@
     "cn": "^0.5.2",
     "lucide-react": "^1.68.0",
     "next": "16.4.5",
+    "next-auth": "5.0.0-beta.32",
     "radix-ui": "^1.8.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",

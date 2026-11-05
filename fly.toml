@@ -8,6 +8,7 @@ swap_size_mb = 512
 [env]
   DATABASE_PATH = '/data/coordination.db'
   IDLE_TIMEOUT_MINUTES = '15'
+  AUTH_TRUST_HOST = 'true'
 
 [http_service]
   internal_port = 3000

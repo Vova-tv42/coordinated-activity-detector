@@ -2,6 +2,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import Database from 'better-sqlite3';
 import { type BetterSQLite3Database, drizzle } from 'drizzle-orm/better-sqlite3';
+import * as schema from './schema';
 
 const LOCAL_DATABASE_PATH = './data/local.db';
 
@@ -17,11 +18,11 @@ export function openDatabase(databasePath: string) {
   // SQLite ignores foreign keys and ON DELETE CASCADE unless enabled on every connection
   sqlite.pragma('foreign_keys = ON');
 
-  return drizzle({ client: sqlite });
+  return drizzle({ client: sqlite, schema, casing: 'snake_case' });
 }
 
 const globalForDatabase = globalThis as typeof globalThis & {
-  database?: BetterSQLite3Database;
+  database?: BetterSQLite3Database<typeof schema>;
 };
 
 export function getDatabase() {

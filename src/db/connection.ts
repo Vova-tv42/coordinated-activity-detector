@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import Database from 'better-sqlite3';
-import { type BetterSQLite3Database, drizzle } from 'drizzle-orm/better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from './schema';
 
@@ -22,8 +22,10 @@ export function openDatabase(databasePath: string) {
   return drizzle({ client: sqlite, schema, casing: 'snake_case' });
 }
 
+export type AppDatabase = ReturnType<typeof openDatabase>;
+
 const globalForDatabase = globalThis as typeof globalThis & {
-  database?: BetterSQLite3Database<typeof schema>;
+  database?: AppDatabase;
 };
 
 export function getDatabase() {

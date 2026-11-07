@@ -1,11 +1,13 @@
 import { Bot, webhookCallback } from 'grammy';
-import type { Message, UserFromGetMe } from 'grammy/types';
+import type { Chat, ChatMember, ChatMemberUpdated, Message, UserFromGetMe } from 'grammy/types';
 import type { AppDatabase } from '@/db/connection';
-import { findTelegramSourceId, saveIncomingMessage } from '@/db/ingest';
+import { findTelegramSourceId, registerTelegramSource, saveIncomingMessage } from '@/db/ingest';
 import { mapTelegramMessage } from '@/telegram/message-mapping';
 
 export const TELEGRAM_WEBHOOK_PATH = '/api/telegram/webhook';
 export const TELEGRAM_ALLOWED_UPDATES = ['message', 'my_chat_member'] as const;
+
+const BOT_JOINED_STATUSES = new Set<ChatMember['status']>(['member', 'administrator']);
 
 type TelegramSettings = {
   token: string;
@@ -43,6 +45,21 @@ function saveTelegramMessage(database: AppDatabase, message: Message) {
   saveIncomingMessage(database, { sourceId, ...incomingMessage });
 }
 
+function registerGroupWhenBotJoins(
+  database: AppDatabase,
+  {
+    chat,
+    new_chat_member: botMembership,
+  }: ChatMemberUpdated & { chat: Chat.GroupChat | Chat.SupergroupChat },
+) {
+  const hasBotJoined = BOT_JOINED_STATUSES.has(botMembership.status);
+  if (!hasBotJoined) {
+    return;
+  }
+
+  registerTelegramSource(database, { chatId: chat.id, title: chat.title });
+}
+
 export function createTelegramWebhookHandler({
   token,
   secretToken,
@@ -51,6 +68,9 @@ export function createTelegramWebhookHandler({
 }: TelegramWebhookOptions) {
   const bot = new Bot(token, { botInfo });
   bot.on('message', (context) => saveTelegramMessage(database, context.message));
+  bot
+    .chatType(['group', 'supergroup'])
+    .on('my_chat_member', (context) => registerGroupWhenBotJoins(database, context.myChatMember));
 
   return webhookCallback(bot, 'std/http', { secretToken });
 }

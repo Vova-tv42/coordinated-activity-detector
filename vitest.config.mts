@@ -10,5 +10,11 @@ export default defineConfig({
   test: {
     environment: 'node',
     passWithNoTests: true,
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.test.ts', 'src/detection/test-fixtures.ts', 'src/components/ui/**'],
+      reporter: [['text', { skipFull: false }], 'html'],
+    },
   },
 });

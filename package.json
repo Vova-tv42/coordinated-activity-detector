@@ -14,7 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "set-webhook": "bun scripts/set-webhook.ts"
+    "set-webhook": "bun scripts/set-webhook.ts",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
@@ -40,6 +41,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "5.1.0",
     "drizzle-kit": "^0.31.11",
     "lefthook": "2.2.2",
     "tailwindcss": "^4",

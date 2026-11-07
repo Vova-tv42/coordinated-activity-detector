@@ -1,8 +1,14 @@
+import { eq } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { type AppDatabase, openDatabase } from '@/db/connection';
-import { findTelegramSourceId, type IncomingMessage, saveIncomingMessage } from '@/db/ingest';
-import { messages, participants, sources } from '@/db/schema';
+import {
+  findTelegramSourceId,
+  type IncomingMessage,
+  registerTelegramSource,
+  saveIncomingMessage,
+} from '@/db/ingest';
+import { detectionProfiles, messages, participants, sources } from '@/db/schema';
 
 const TEST_CHAT_ID = -100123;
 
@@ -93,6 +99,41 @@ describe('ingest', () => {
       saveIncomingMessage(database, createMessage({ tgMessageId: undefined }));
 
       expect(database.select().from(messages).all()).toHaveLength(2);
+    });
+  });
+
+  describe('registerTelegramSource', () => {
+    it('зберігає налаштований профіль джерела при повторній реєстрації', () => {
+      const customProfile = database
+        .insert(detectionProfiles)
+        .values({
+          name: 'Чутливий',
+          syncGapSec: 30,
+          windowMinutes: 15,
+          windowMaxMessages: 200,
+          minTextLength: 8,
+          simThreshold: 0.5,
+          wText: 0.5,
+          wCoactivity: 0.3,
+          wCosharing: 0.2,
+          edgeThreshold: 0.4,
+          keepThreshold: 0.1,
+        })
+        .returning()
+        .get();
+      database
+        .update(sources)
+        .set({ profileId: customProfile.id })
+        .where(eq(sources.id, sourceId))
+        .run();
+
+      const registeredSourceId = registerTelegramSource(database, {
+        chatId: TEST_CHAT_ID,
+        title: 'Тестова група',
+      });
+
+      expect(registeredSourceId).toBe(sourceId);
+      expect(database.select().from(sources).get()?.profileId).toBe(customProfile.id);
     });
   });
 

@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import type { AppDatabase } from '@/db/connection';
-import { messages, participants, sources } from '@/db/schema';
+import { detectionProfiles, messages, participants, sources } from '@/db/schema';
 import { normalizeText } from '@/lib/normalize-text';
 
 export type IncomingMessage = {
@@ -11,6 +11,36 @@ export type IncomingMessage = {
   sentAt: Date;
   text: string;
 };
+
+export const DEFAULT_PROFILE_NAME = 'Стандартний';
+
+export type TelegramGroup = {
+  chatId: number;
+  title: string;
+};
+
+export function registerTelegramSource(database: AppDatabase, group: TelegramGroup) {
+  const defaultProfile = database
+    .select({ id: detectionProfiles.id })
+    .from(detectionProfiles)
+    .where(eq(detectionProfiles.name, DEFAULT_PROFILE_NAME))
+    .get();
+  if (!defaultProfile) {
+    throw new Error(`Detection profile "${DEFAULT_PROFILE_NAME}" is missing, run migrations`);
+  }
+
+  return database
+    .insert(sources)
+    .values({
+      kind: 'telegram',
+      tgChatId: group.chatId,
+      title: group.title,
+      profileId: defaultProfile.id,
+    })
+    .onConflictDoUpdate({ target: sources.tgChatId, set: { title: group.title } })
+    .returning({ id: sources.id })
+    .get().id;
+}
 
 export function findTelegramSourceId(database: AppDatabase, chatId: number) {
   const source = database

@@ -48,6 +48,24 @@ function createTextUpdate(text: string) {
   };
 }
 
+function createBotMembershipUpdate(
+  chat: object,
+  oldStatus: 'left' | 'member' | 'kicked',
+  newStatus: 'left' | 'member' | 'administrator' | 'kicked',
+) {
+  const botUser = { id: botInfo.id, is_bot: true, first_name: botInfo.first_name };
+  return {
+    update_id: 2,
+    my_chat_member: {
+      chat,
+      from: sender,
+      date: 1_757_505_600,
+      old_chat_member: { status: oldStatus, user: botUser },
+      new_chat_member: { status: newStatus, user: botUser },
+    },
+  };
+}
+
 describe('createTelegramWebhookHandler', () => {
   let database: AppDatabase;
   let handleTelegramUpdate: (request: Request) => Promise<Response>;
@@ -98,6 +116,78 @@ describe('createTelegramWebhookHandler', () => {
       normalizedText: 'привіт світе',
     });
     expect(participant).toMatchObject({ externalId: '42', displayName: 'Alice' });
+  });
+
+  it('реєструє групу як джерело з дефолтним профілем, коли бота додають у групу', async () => {
+    const response = await handleTelegramUpdate(
+      createWebhookRequest(createBotMembershipUpdate(groupChat, 'left', 'member'), {
+        [SECRET_HEADER]: SECRET_TOKEN,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(database.select().from(sources).all()).toEqual([
+      expect.objectContaining({
+        kind: 'telegram',
+        tgChatId: groupChat.id,
+        title: groupChat.title,
+        profileId: 1,
+        isActive: true,
+      }),
+    ]);
+  });
+
+  it('після реєстрації групи зберігає її повідомлення', async () => {
+    await handleTelegramUpdate(
+      createWebhookRequest(createBotMembershipUpdate(groupChat, 'left', 'administrator'), {
+        [SECRET_HEADER]: SECRET_TOKEN,
+      }),
+    );
+    await handleTelegramUpdate(
+      createWebhookRequest(createTextUpdate('Перше повідомлення'), {
+        [SECRET_HEADER]: SECRET_TOKEN,
+      }),
+    );
+
+    expect(database.select().from(messages).all()).toHaveLength(1);
+  });
+
+  it('не створює дубліката при повторному додаванні бота і оновлює назву групи', async () => {
+    registerGroupAsSource();
+    const renamedGroup = { ...groupChat, title: 'Нова назва групи' };
+
+    await handleTelegramUpdate(
+      createWebhookRequest(createBotMembershipUpdate(renamedGroup, 'member', 'administrator'), {
+        [SECRET_HEADER]: SECRET_TOKEN,
+      }),
+    );
+
+    const registeredSources = database.select().from(sources).all();
+    expect(registeredSources).toHaveLength(1);
+    expect(registeredSources[0].title).toBe('Нова назва групи');
+  });
+
+  it('не реєструє джерело, коли бота видаляють з групи', async () => {
+    await handleTelegramUpdate(
+      createWebhookRequest(createBotMembershipUpdate(groupChat, 'member', 'kicked'), {
+        [SECRET_HEADER]: SECRET_TOKEN,
+      }),
+    );
+
+    expect(database.select().from(sources).all()).toEqual([]);
+  });
+
+  it('не реєструє джерело для особистого чату з ботом', async () => {
+    const privateChat = { id: 42, type: 'private', first_name: 'Alice' };
+
+    const response = await handleTelegramUpdate(
+      createWebhookRequest(createBotMembershipUpdate(privateChat, 'left', 'member'), {
+        [SECRET_HEADER]: SECRET_TOKEN,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(database.select().from(sources).all()).toEqual([]);
   });
 
   it('не зберігає повідомлення з групи, яка не є джерелом', async () => {

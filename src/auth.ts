@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
-import { isAllowedAdminEmail } from '@/lib/admin-access';
+import { hasAdminAccess } from '@/db/admins';
+import { getDatabase } from '@/db/connection';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Google],
@@ -12,7 +13,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn({ profile }) {
       const isVerifiedEmail = profile?.email_verified === true;
 
-      return isVerifiedEmail && isAllowedAdminEmail(profile?.email);
+      return isVerifiedEmail && hasAdminAccess(getDatabase(), profile?.email);
     },
   },
 });

@@ -1,9 +1,13 @@
+export function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
 export function getEnvAdminEmails(): string[] {
   const adminEmailsSetting = process.env.ADMIN_EMAILS ?? '';
 
   return adminEmailsSetting
     .split(',')
-    .map((email) => email.trim().toLowerCase())
+    .map(normalizeEmail)
     .filter((email) => email.length > 0);
 }
 
@@ -12,5 +16,5 @@ export function isAllowedAdminEmail(email: string | null | undefined): boolean {
     return false;
   }
 
-  return getEnvAdminEmails().includes(email.trim().toLowerCase());
+  return getEnvAdminEmails().includes(normalizeEmail(email));
 }

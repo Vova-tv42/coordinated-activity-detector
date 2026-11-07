@@ -19,6 +19,47 @@ export interface DetectionProfileConfig {
   keepThreshold?: number;
 }
 
+export type ParticipantId = number | string;
+
+export interface ScoreWeightsProfile {
+  wText: number;
+  wCoactivity: number;
+  wCosharing: number;
+}
+
+export interface GraphThresholdProfile extends ScoreWeightsProfile {
+  edgeThreshold: number;
+  keepThreshold?: number;
+}
+
+export interface ScoredPair<TMessage extends DetectorMessage = DetectorMessage> {
+  participantAId: ParticipantId;
+  participantBId: ParticipantId;
+  score: number;
+  signals: PairSignalsResult<TMessage>;
+}
+
+export type CoordinatedEdge<TMessage extends DetectorMessage = DetectorMessage> =
+  ScoredPair<TMessage>;
+
+export interface CoordinatedGroup<TMessage extends DetectorMessage = DetectorMessage> {
+  groupKey: string;
+  participantIds: ParticipantId[];
+  score: number;
+  edges: CoordinatedEdge<TMessage>[];
+}
+
+export interface ParticipantMessages<TMessage extends DetectorMessage = DetectorMessage> {
+  participantId: ParticipantId;
+  messages: TMessage[];
+}
+
+export interface CoordinationAnalysisResult<TMessage extends DetectorMessage = DetectorMessage> {
+  groups: CoordinatedGroup<TMessage>[];
+  edges: CoordinatedEdge<TMessage>[];
+  retainedPairs: ScoredPair<TMessage>[];
+}
+
 export interface TextEvidence<TMessage extends DetectorMessage = DetectorMessage> {
   messageA: TMessage;
   messageB: TMessage;

@@ -8,7 +8,7 @@ const APOSTROPHES = /['`’ʼ]/g;
 const NON_WORD_CHARACTERS = /[^\p{L}\p{N}\s]+/gu;
 const WHITESPACE = /\s+/g;
 
-function removeLinks(text: string) {
+export function removeLinks(text: string) {
   const links = linkify.match(text) ?? [];
 
   return links.reduceRight(

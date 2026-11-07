@@ -42,8 +42,11 @@ async function SourceMessages({ params }: Pick<PageProps<'/sources/[id]'>, 'para
     <Card>
       <CardHeader>
         <CardTitle>{source.title}</CardTitle>
-        <CardAction>
+        <CardAction className="flex items-center gap-2">
           <SourceKindBadge kind={source.kind} />
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/sources/${source.id}/profile`}>Параметри аналізу</Link>
+          </Button>
         </CardAction>
       </CardHeader>
       <CardContent>

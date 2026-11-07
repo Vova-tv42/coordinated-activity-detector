@@ -52,7 +52,7 @@ describe('POST /api/telegram/webhook', () => {
     expect(response).toBe(await handleTelegramUpdate.mock.results[0].value);
   });
 
-  it('створює обробник з налаштуваннями Telegram і базою даних', async () => {
+  it('створює обробник з налаштуваннями Telegram, базою даних і тригером аналізу', async () => {
     const { POST } = await importRoute();
 
     await POST(createWebhookRequest());
@@ -61,6 +61,7 @@ describe('POST /api/telegram/webhook', () => {
       token: '123:test-token',
       secretToken: 'test-secret',
       database: placeholderDatabase,
+      onMessageSaved: expect.any(Function),
     });
   });
 

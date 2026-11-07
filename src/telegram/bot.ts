@@ -17,6 +17,7 @@ type TelegramSettings = {
 type TelegramWebhookOptions = TelegramSettings & {
   database: AppDatabase;
   botInfo?: UserFromGetMe;
+  onMessageSaved?: (sourceId: number) => void;
 };
 
 export function readTelegramSettings(): TelegramSettings {
@@ -29,7 +30,11 @@ export function readTelegramSettings(): TelegramSettings {
   return { token, secretToken };
 }
 
-function saveTelegramMessage(database: AppDatabase, message: Message) {
+function saveTelegramMessage(
+  database: AppDatabase,
+  message: Message,
+  onMessageSaved?: (sourceId: number) => void,
+) {
   const chatMessage = mapTelegramMessage(message);
   if (!chatMessage) {
     return;
@@ -43,6 +48,7 @@ function saveTelegramMessage(database: AppDatabase, message: Message) {
   }
 
   saveIncomingMessage(database, { sourceId, ...incomingMessage });
+  onMessageSaved?.(sourceId);
 }
 
 function registerGroupWhenBotJoins(
@@ -65,9 +71,10 @@ export function createTelegramWebhookHandler({
   secretToken,
   database,
   botInfo,
+  onMessageSaved,
 }: TelegramWebhookOptions) {
   const bot = new Bot(token, { botInfo });
-  bot.on('message', (context) => saveTelegramMessage(database, context.message));
+  bot.on('message', (context) => saveTelegramMessage(database, context.message, onMessageSaved));
   bot
     .chatType(['group', 'supergroup'])
     .on('my_chat_member', (context) => registerGroupWhenBotJoins(database, context.myChatMember));

@@ -118,6 +118,28 @@ describe('createTelegramWebhookHandler', () => {
     expect(participant).toMatchObject({ externalId: '42', displayName: 'Alice' });
   });
 
+  it('повідомляє про збережене повідомлення лише для зареєстрованої групи', async () => {
+    const onMessageSaved = vi.fn();
+    const handleUpdateWithTrigger = createTelegramWebhookHandler({
+      token: '123:test-token',
+      secretToken: SECRET_TOKEN,
+      database,
+      botInfo,
+      onMessageSaved,
+    });
+    const sendTextUpdate = () =>
+      handleUpdateWithTrigger(
+        createWebhookRequest(createTextUpdate('Привіт'), { [SECRET_HEADER]: SECRET_TOKEN }),
+      );
+
+    await sendTextUpdate();
+    expect(onMessageSaved).not.toHaveBeenCalled();
+
+    registerGroupAsSource();
+    await sendTextUpdate();
+    expect(onMessageSaved).toHaveBeenCalledWith(database.select().from(sources).get()?.id);
+  });
+
   it('реєструє групу як джерело з дефолтним профілем, коли бота додають у групу', async () => {
     const response = await handleTelegramUpdate(
       createWebhookRequest(createBotMembershipUpdate(groupChat, 'left', 'member'), {

@@ -103,6 +103,19 @@ describe('ingest', () => {
   });
 
   describe('registerTelegramSource', () => {
+    it('падає з підказкою і не створює джерело, якщо дефолтного профілю немає', () => {
+      const databaseWithoutProfile = openDatabase(':memory:');
+      migrate(databaseWithoutProfile, { migrationsFolder: './drizzle' });
+      databaseWithoutProfile.delete(detectionProfiles).run();
+
+      expect(() =>
+        registerTelegramSource(databaseWithoutProfile, { chatId: -100999, title: 'Нова група' }),
+      ).toThrow('run migrations');
+      expect(databaseWithoutProfile.select().from(sources).all()).toEqual([]);
+
+      databaseWithoutProfile.$client.close();
+    });
+
     it('зберігає налаштований профіль джерела при повторній реєстрації', () => {
       const customProfile = database
         .insert(detectionProfiles)

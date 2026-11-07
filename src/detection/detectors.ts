@@ -5,6 +5,7 @@ import type { DetectionProfileConfig, DetectorMessage, PairSignalsResult } from 
 
 export * from './coactivity';
 export * from './cosharing';
+export * from './graph';
 export * from './jaccard';
 export * from './text-similarity';
 export * from './types';

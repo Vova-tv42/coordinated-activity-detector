@@ -15,8 +15,19 @@ import {
   snapshots,
   sources,
 } from '@/db/schema';
-import { analyzeSource } from '@/db/snapshots';
-import { at, copyPasteFarm, type FixtureMessage, quietChat } from '@/detection/test-fixtures';
+import {
+  analyzeSource,
+  findLatestSnapshot,
+  listSnapshotGroups,
+  listSnapshotPairs,
+} from '@/db/snapshots';
+import {
+  at,
+  copyPasteFarm,
+  DEFAULT_PROFILE,
+  type FixtureMessage,
+  quietChat,
+} from '@/detection/test-fixtures';
 
 const WINDOW_END = at(30);
 
@@ -176,5 +187,63 @@ describe('analyzeSource', () => {
 
   it('кидає помилку для неіснуючого джерела', () => {
     expect(() => analyzeSource(database, 999, WINDOW_END)).toThrow(/999/);
+  });
+
+  describe('читання останнього снапшота', () => {
+    function analyzeFarm() {
+      saveMessages(copyPasteFarm.messages);
+      analyzeSource(database, sourceId, WINDOW_END);
+      const snapshot = findLatestSnapshot(database, sourceId);
+      if (!snapshot) {
+        throw new Error('Snapshot was not saved');
+      }
+      return snapshot;
+    }
+
+    it('повертає undefined, поки аналіз ще не запускався', () => {
+      expect(findLatestSnapshot(database, sourceId)).toBeUndefined();
+    });
+
+    it('повертає групи з іменами учасників', () => {
+      const snapshot = analyzeFarm();
+
+      expect(listSnapshotGroups(database, snapshot.id)).toEqual([
+        {
+          id: expect.any(Number),
+          score: expect.any(Number),
+          memberNames: ['bot1', 'bot2', 'bot3'],
+        },
+      ]);
+    });
+
+    it('повертає пари з сигналами, відсортовані за скором', () => {
+      const snapshot = analyzeFarm();
+
+      const pairs = listSnapshotPairs(database, snapshot.id, DEFAULT_PROFILE);
+
+      const scores = pairs.map((pair) => pair.score);
+      expect(scores).toEqual([...scores].sort((scoreA, scoreB) => scoreB - scoreA));
+      expect(
+        pairs.slice(0, 3).map((pair) => [pair.participantAName, pair.participantBName]),
+      ).toEqual(
+        expect.arrayContaining([
+          ['bot1', 'bot2'],
+          ['bot1', 'bot3'],
+          ['bot2', 'bot3'],
+        ]),
+      );
+    });
+
+    it('рахує скор пари за вагами профілю', () => {
+      const snapshot = analyzeFarm();
+
+      const [topPair] = listSnapshotPairs(database, snapshot.id, {
+        wText: 1,
+        wCoactivity: 0,
+        wCosharing: 0,
+      });
+
+      expect(topPair.score).toBe(topPair.signals.text);
+    });
   });
 });

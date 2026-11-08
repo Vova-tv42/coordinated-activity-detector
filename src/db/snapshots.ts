@@ -1,4 +1,5 @@
-import { and, desc, eq, gt, isNotNull, lte } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, isNotNull, lte } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import type { AppDatabase } from '@/db/connection';
 import { findSourceProfile } from '@/db/profiles';
 import {
@@ -8,13 +9,34 @@ import {
   groupMembers,
   messages,
   pairSignals,
+  participants,
   snapshotGroups,
   snapshots,
 } from '@/db/schema';
-import { analyzeCoordinationFromMessages, createGroupKey } from '@/detection/detectors';
+import {
+  analyzeCoordinationFromMessages,
+  calculatePairScore,
+  createGroupKey,
+  type ScoreWeightsProfile,
+} from '@/detection/detectors';
 
 const MS_IN_MINUTE = 60_000;
 const SIGNAL_KINDS = ['text', 'coactivity', 'cosharing'] as const;
+
+type SignalKind = (typeof SIGNAL_KINDS)[number];
+
+type SnapshotGroupView = {
+  id: number;
+  score: number;
+  memberNames: string[];
+};
+
+type SnapshotPairView = {
+  key: string;
+  participantAName: string;
+  participantBName: string;
+  signals: Record<SignalKind, number>;
+};
 
 function selectWindowMessages(database: AppDatabase, sourceId: number, windowEnd: Date) {
   const profile = findSourceProfile(database, sourceId);
@@ -158,4 +180,96 @@ export function analyzeSource(database: AppDatabase, sourceId: number, windowEnd
         .run();
     }
   });
+}
+
+export function findLatestSnapshot(database: AppDatabase, sourceId: number) {
+  return database
+    .select({
+      id: snapshots.id,
+      computedAt: snapshots.computedAt,
+      windowStart: snapshots.windowStart,
+      windowEnd: snapshots.windowEnd,
+    })
+    .from(snapshots)
+    .where(eq(snapshots.sourceId, sourceId))
+    .orderBy(desc(snapshots.computedAt))
+    .get();
+}
+
+export function listSnapshotGroups(database: AppDatabase, snapshotId: number) {
+  const memberRows = database
+    .select({
+      groupId: snapshotGroups.id,
+      score: snapshotGroups.score,
+      memberName: participants.displayName,
+    })
+    .from(snapshotGroups)
+    .innerJoin(groupMembers, eq(groupMembers.snapshotGroupId, snapshotGroups.id))
+    .innerJoin(participants, eq(participants.id, groupMembers.participantId))
+    .where(eq(snapshotGroups.snapshotId, snapshotId))
+    .orderBy(desc(snapshotGroups.score), asc(snapshotGroups.id), asc(participants.displayName))
+    .all();
+
+  const groupsById = new Map<number, SnapshotGroupView>();
+  for (const row of memberRows) {
+    const group = groupsById.get(row.groupId) ?? {
+      id: row.groupId,
+      score: row.score,
+      memberNames: [],
+    };
+    group.memberNames.push(row.memberName);
+    groupsById.set(row.groupId, group);
+  }
+  return [...groupsById.values()];
+}
+
+// Scores are not stored, so they are recalculated with the weights of the current profile
+export function listSnapshotPairs(
+  database: AppDatabase,
+  snapshotId: number,
+  weights: ScoreWeightsProfile,
+) {
+  const participantA = alias(participants, 'participant_a');
+  const participantB = alias(participants, 'participant_b');
+  const signalRows = database
+    .select({
+      participantAId: pairSignals.participantAId,
+      participantBId: pairSignals.participantBId,
+      participantAName: participantA.displayName,
+      participantBName: participantB.displayName,
+      signalKind: pairSignals.signalKind,
+      value: pairSignals.value,
+    })
+    .from(pairSignals)
+    .innerJoin(participantA, eq(participantA.id, pairSignals.participantAId))
+    .innerJoin(participantB, eq(participantB.id, pairSignals.participantBId))
+    .where(eq(pairSignals.snapshotId, snapshotId))
+    .all();
+
+  const pairsByKey = new Map<string, SnapshotPairView>();
+  for (const row of signalRows) {
+    const key = createGroupKey([row.participantAId, row.participantBId]);
+    const pair = pairsByKey.get(key) ?? {
+      key,
+      participantAName: row.participantAName,
+      participantBName: row.participantBName,
+      signals: { text: 0, coactivity: 0, cosharing: 0 },
+    };
+    pair.signals[row.signalKind] = row.value;
+    pairsByKey.set(key, pair);
+  }
+
+  return [...pairsByKey.values()]
+    .map((pair) => ({
+      ...pair,
+      score: calculatePairScore(
+        {
+          text: { value: pair.signals.text },
+          coactivity: { value: pair.signals.coactivity },
+          cosharing: { value: pair.signals.cosharing },
+        },
+        weights,
+      ),
+    }))
+    .sort((pairA, pairB) => pairB.score - pairA.score);
 }

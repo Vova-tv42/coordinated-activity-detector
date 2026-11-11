@@ -1,0 +1,899 @@
+{
+  "id": "ad7a42d6-00b0-465f-9735-66e7ffba50ae",
+  "prevId": "a9c93f12-50d2-4879-bc20-41b1a95e8513",
+  "version": "6",
+  "dialect": "sqlite",
+  "tables": {
+    "admins": {
+      "name": "admins",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "added_by": {
+          "name": "added_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "admins_email_unique": {
+          "name": "admins_email_unique",
+          "columns": ["email"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "detection_profiles": {
+      "name": "detection_profiles",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sync_gap_sec": {
+          "name": "sync_gap_sec",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "window_minutes": {
+          "name": "window_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "window_max_messages": {
+          "name": "window_max_messages",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "min_text_length": {
+          "name": "min_text_length",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sim_threshold": {
+          "name": "sim_threshold",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "w_text": {
+          "name": "w_text",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "w_coactivity": {
+          "name": "w_coactivity",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "w_cosharing": {
+          "name": "w_cosharing",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "edge_threshold": {
+          "name": "edge_threshold",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "keep_threshold": {
+          "name": "keep_threshold",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "detection_profiles_name_unique": {
+          "name": "detection_profiles_name_unique",
+          "columns": ["name"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "evidence": {
+      "name": "evidence",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "pair_signal_id": {
+          "name": "pair_signal_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "message_a_id": {
+          "name": "message_a_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "message_b_id": {
+          "name": "message_b_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "evidence_pair_signal_id_pair_signals_id_fk": {
+          "name": "evidence_pair_signal_id_pair_signals_id_fk",
+          "tableFrom": "evidence",
+          "columnsFrom": ["pair_signal_id"],
+          "tableTo": "pair_signals",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "evidence_message_a_id_messages_id_fk": {
+          "name": "evidence_message_a_id_messages_id_fk",
+          "tableFrom": "evidence",
+          "columnsFrom": ["message_a_id"],
+          "tableTo": "messages",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "evidence_message_b_id_messages_id_fk": {
+          "name": "evidence_message_b_id_messages_id_fk",
+          "tableFrom": "evidence",
+          "columnsFrom": ["message_b_id"],
+          "tableTo": "messages",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "finding_members": {
+      "name": "finding_members",
+      "columns": {
+        "finding_id": {
+          "name": "finding_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "finding_members_finding_id_findings_id_fk": {
+          "name": "finding_members_finding_id_findings_id_fk",
+          "tableFrom": "finding_members",
+          "columnsFrom": ["finding_id"],
+          "tableTo": "findings",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "finding_members_participant_id_participants_id_fk": {
+          "name": "finding_members_participant_id_participants_id_fk",
+          "tableFrom": "finding_members",
+          "columnsFrom": ["participant_id"],
+          "tableTo": "participants",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "finding_members_finding_id_participant_id_pk": {
+          "columns": ["finding_id", "participant_id"],
+          "name": "finding_members_finding_id_participant_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "findings": {
+      "name": "findings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "detected_at": {
+          "name": "detected_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "group_key": {
+          "name": "group_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "score": {
+          "name": "score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "snapshot_group_id": {
+          "name": "snapshot_group_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "findings_source_id_detected_at_idx": {
+          "name": "findings_source_id_detected_at_idx",
+          "columns": ["source_id", "detected_at"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "findings_source_id_sources_id_fk": {
+          "name": "findings_source_id_sources_id_fk",
+          "tableFrom": "findings",
+          "columnsFrom": ["source_id"],
+          "tableTo": "sources",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "findings_snapshot_group_id_snapshot_groups_id_fk": {
+          "name": "findings_snapshot_group_id_snapshot_groups_id_fk",
+          "tableFrom": "findings",
+          "columnsFrom": ["snapshot_group_id"],
+          "tableTo": "snapshot_groups",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "group_members": {
+      "name": "group_members",
+      "columns": {
+        "snapshot_group_id": {
+          "name": "snapshot_group_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "group_members_snapshot_group_id_snapshot_groups_id_fk": {
+          "name": "group_members_snapshot_group_id_snapshot_groups_id_fk",
+          "tableFrom": "group_members",
+          "columnsFrom": ["snapshot_group_id"],
+          "tableTo": "snapshot_groups",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "group_members_participant_id_participants_id_fk": {
+          "name": "group_members_participant_id_participants_id_fk",
+          "tableFrom": "group_members",
+          "columnsFrom": ["participant_id"],
+          "tableTo": "participants",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "group_members_snapshot_group_id_participant_id_pk": {
+          "columns": ["snapshot_group_id", "participant_id"],
+          "name": "group_members_snapshot_group_id_participant_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "messages": {
+      "name": "messages",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tg_message_id": {
+          "name": "tg_message_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "normalized_text": {
+          "name": "normalized_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "messages_source_id_sent_at_idx": {
+          "name": "messages_source_id_sent_at_idx",
+          "columns": ["source_id", "sent_at"],
+          "isUnique": false
+        },
+        "messages_source_id_tg_message_id_unique": {
+          "name": "messages_source_id_tg_message_id_unique",
+          "columns": ["source_id", "tg_message_id"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "messages_source_id_sources_id_fk": {
+          "name": "messages_source_id_sources_id_fk",
+          "tableFrom": "messages",
+          "columnsFrom": ["source_id"],
+          "tableTo": "sources",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "messages_participant_id_participants_id_fk": {
+          "name": "messages_participant_id_participants_id_fk",
+          "tableFrom": "messages",
+          "columnsFrom": ["participant_id"],
+          "tableTo": "participants",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "pair_signals": {
+      "name": "pair_signals",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "snapshot_id": {
+          "name": "snapshot_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "participant_a_id": {
+          "name": "participant_a_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "participant_b_id": {
+          "name": "participant_b_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "signal_kind": {
+          "name": "signal_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "pair_signals_snapshot_id_idx": {
+          "name": "pair_signals_snapshot_id_idx",
+          "columns": ["snapshot_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "pair_signals_snapshot_id_snapshots_id_fk": {
+          "name": "pair_signals_snapshot_id_snapshots_id_fk",
+          "tableFrom": "pair_signals",
+          "columnsFrom": ["snapshot_id"],
+          "tableTo": "snapshots",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "pair_signals_participant_a_id_participants_id_fk": {
+          "name": "pair_signals_participant_a_id_participants_id_fk",
+          "tableFrom": "pair_signals",
+          "columnsFrom": ["participant_a_id"],
+          "tableTo": "participants",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "pair_signals_participant_b_id_participants_id_fk": {
+          "name": "pair_signals_participant_b_id_participants_id_fk",
+          "tableFrom": "pair_signals",
+          "columnsFrom": ["participant_b_id"],
+          "tableTo": "participants",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "participants": {
+      "name": "participants",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "external_id": {
+          "name": "external_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "first_seen_at": {
+          "name": "first_seen_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "message_count": {
+          "name": "message_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "participants_source_id_external_id_unique": {
+          "name": "participants_source_id_external_id_unique",
+          "columns": ["source_id", "external_id"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "participants_source_id_sources_id_fk": {
+          "name": "participants_source_id_sources_id_fk",
+          "tableFrom": "participants",
+          "columnsFrom": ["source_id"],
+          "tableTo": "sources",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "snapshot_groups": {
+      "name": "snapshot_groups",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "snapshot_id": {
+          "name": "snapshot_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "score": {
+          "name": "score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "member_count": {
+          "name": "member_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "snapshot_groups_snapshot_id_snapshots_id_fk": {
+          "name": "snapshot_groups_snapshot_id_snapshots_id_fk",
+          "tableFrom": "snapshot_groups",
+          "columnsFrom": ["snapshot_id"],
+          "tableTo": "snapshots",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "snapshots": {
+      "name": "snapshots",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "computed_at": {
+          "name": "computed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "window_start": {
+          "name": "window_start",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "window_end": {
+          "name": "window_end",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "snapshots_source_id_sources_id_fk": {
+          "name": "snapshots_source_id_sources_id_fk",
+          "tableFrom": "snapshots",
+          "columnsFrom": ["source_id"],
+          "tableTo": "sources",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "sources": {
+      "name": "sources",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tg_chat_id": {
+          "name": "tg_chat_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "profile_id": {
+          "name": "profile_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "sources_tg_chat_id_unique": {
+          "name": "sources_tg_chat_id_unique",
+          "columns": ["tg_chat_id"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "sources_profile_id_detection_profiles_id_fk": {
+          "name": "sources_profile_id_detection_profiles_id_fk",
+          "tableFrom": "sources",
+          "columnsFrom": ["profile_id"],
+          "tableTo": "detection_profiles",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "window_metrics": {
+      "name": "window_metrics",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "window_start": {
+          "name": "window_start",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "window_end": {
+          "name": "window_end",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "max_score": {
+          "name": "max_score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "group_count": {
+          "name": "group_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "flagged_participants": {
+          "name": "flagged_participants",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "window_metrics_source_id_window_start_idx": {
+          "name": "window_metrics_source_id_window_start_idx",
+          "columns": ["source_id", "window_start"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "window_metrics_source_id_sources_id_fk": {
+          "name": "window_metrics_source_id_sources_id_fk",
+          "tableFrom": "window_metrics",
+          "columnsFrom": ["source_id"],
+          "tableTo": "sources",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

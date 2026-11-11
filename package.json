@@ -15,7 +15,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "set-webhook": "bun scripts/set-webhook.ts",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "db:sql": "bun --silent scripts/export-database-sql.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

@@ -106,6 +106,8 @@ describe('ingest', () => {
     it('падає з підказкою і не створює джерело, якщо дефолтного профілю немає', () => {
       const databaseWithoutProfile = openDatabase(':memory:');
       migrate(databaseWithoutProfile, { migrationsFolder: './drizzle' });
+      // The trigger protects the default profile, so the test drops it to simulate an older database
+      databaseWithoutProfile.$client.exec('DROP TRIGGER detection_profiles_keep_default_on_delete');
       databaseWithoutProfile.delete(detectionProfiles).run();
 
       expect(() =>

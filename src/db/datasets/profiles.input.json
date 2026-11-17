@@ -1,0 +1,47 @@
+{
+  "detection_profiles": [
+    {
+      "id": 2,
+      "name": "Чутливий",
+      "sync_gap_sec": 30,
+      "window_minutes": 15,
+      "window_max_messages": 200,
+      "min_text_length": 8,
+      "sim_threshold": 0.5,
+      "w_text": 0.5,
+      "w_coactivity": 0.3,
+      "w_cosharing": 0.2,
+      "edge_threshold": 0.4,
+      "keep_threshold": 0.1
+    }
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "kind": "telegram",
+      "tg_chat_id": -1001000000001,
+      "title": "Міська спільнота",
+      "profile_id": 1,
+      "is_active": 1,
+      "created_at": 1789038000000
+    },
+    {
+      "id": 2,
+      "kind": "telegram",
+      "tg_chat_id": -1001000000003,
+      "title": "Новини району",
+      "profile_id": 1,
+      "is_active": 1,
+      "created_at": 1789038060000
+    },
+    {
+      "id": 3,
+      "kind": "upload",
+      "tg_chat_id": null,
+      "title": "Демо-чат",
+      "profile_id": 2,
+      "is_active": 1,
+      "created_at": 1789038120000
+    }
+  ]
+}

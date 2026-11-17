@@ -1,0 +1,87 @@
+{
+  "sources": [
+    {
+      "id": 1,
+      "kind": "telegram",
+      "tg_chat_id": -1001000000002,
+      "title": "Розмова друзів",
+      "profile_id": 1,
+      "is_active": 1,
+      "created_at": 1789038000000
+    }
+  ],
+  "participants": [
+    {
+      "id": 1,
+      "source_id": 1,
+      "external_id": "1001",
+      "display_name": "olena",
+      "first_seen_at": 1789042200000,
+      "message_count": 3
+    },
+    {
+      "id": 2,
+      "source_id": 1,
+      "external_id": "1002",
+      "display_name": "taras",
+      "first_seen_at": 1789042230000,
+      "message_count": 3
+    }
+  ],
+  "messages": [
+    {
+      "id": 1,
+      "source_id": 1,
+      "participant_id": 1,
+      "tg_message_id": 1,
+      "sent_at": 1789042200000,
+      "text": "Привіт! Як пройшла твоя співбесіда вчора?",
+      "normalized_text": "привіт як пройшла твоя співбесіда вчора"
+    },
+    {
+      "id": 2,
+      "source_id": 1,
+      "participant_id": 2,
+      "tg_message_id": 2,
+      "sent_at": 1789042230000,
+      "text": "Чудово, мене запросили на другий етап у пʼятницю",
+      "normalized_text": "чудово мене запросили на другий етап у пятницю"
+    },
+    {
+      "id": 3,
+      "source_id": 1,
+      "participant_id": 1,
+      "tg_message_id": 3,
+      "sent_at": 1789042270000,
+      "text": "Вітаю! А що там треба буде робити на другому етапі?",
+      "normalized_text": "вітаю а що там треба буде робити на другому етапі"
+    },
+    {
+      "id": 4,
+      "source_id": 1,
+      "participant_id": 2,
+      "tg_message_id": 4,
+      "sent_at": 1789042300000,
+      "text": "Тестове завдання і розмову з керівником команди",
+      "normalized_text": "тестове завдання і розмову з керівником команди"
+    },
+    {
+      "id": 5,
+      "source_id": 1,
+      "participant_id": 1,
+      "tg_message_id": 5,
+      "sent_at": 1789042335000,
+      "text": "Тримаю кулаки, розкажеш потім, як усе пройшло",
+      "normalized_text": "тримаю кулаки розкажеш потім як усе пройшло"
+    },
+    {
+      "id": 6,
+      "source_id": 1,
+      "participant_id": 2,
+      "tg_message_id": 6,
+      "sent_at": 1789042370000,
+      "text": "Обовʼязково, дякую за підтримку, ти найкраща",
+      "normalized_text": "обовязково дякую за підтримку ти найкраща"
+    }
+  ]
+}

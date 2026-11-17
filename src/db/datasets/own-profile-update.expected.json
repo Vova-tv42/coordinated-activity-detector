@@ -1,0 +1,61 @@
+{
+  "detection_profiles": [
+    {
+      "id": 1,
+      "name": "Стандартний",
+      "sync_gap_sec": 60,
+      "window_minutes": 30,
+      "window_max_messages": 500,
+      "min_text_length": 12,
+      "sim_threshold": 0.6,
+      "w_text": 0.5,
+      "w_coactivity": 0.3,
+      "w_cosharing": 0.2,
+      "edge_threshold": 0.5,
+      "keep_threshold": 0.2
+    },
+    {
+      "id": 2,
+      "name": "Чутливий",
+      "sync_gap_sec": 45,
+      "window_minutes": 60,
+      "window_max_messages": 300,
+      "min_text_length": 10,
+      "sim_threshold": 0.7,
+      "w_text": 0.6,
+      "w_coactivity": 0.2,
+      "w_cosharing": 0.2,
+      "edge_threshold": 0.55,
+      "keep_threshold": 0.25
+    }
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "kind": "telegram",
+      "tg_chat_id": -1001000000001,
+      "title": "Міська спільнота",
+      "profile_id": 1,
+      "is_active": 1,
+      "created_at": 1789038000000
+    },
+    {
+      "id": 2,
+      "kind": "telegram",
+      "tg_chat_id": -1001000000003,
+      "title": "Новини району",
+      "profile_id": 1,
+      "is_active": 1,
+      "created_at": 1789038060000
+    },
+    {
+      "id": 3,
+      "kind": "upload",
+      "tg_chat_id": null,
+      "title": "Демо-чат",
+      "profile_id": 2,
+      "is_active": 1,
+      "created_at": 1789038120000
+    }
+  ]
+}

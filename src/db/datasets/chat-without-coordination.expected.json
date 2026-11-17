@@ -1,0 +1,42 @@
+{
+  "snapshots": [
+    {
+      "id": 1,
+      "source_id": 1,
+      "computed_at": 1789043400000,
+      "window_start": 1789041600000,
+      "window_end": 1789043400000
+    }
+  ],
+  "snapshot_groups": [],
+  "group_members": [],
+  "pair_signals": [
+    {
+      "id": 1,
+      "snapshot_id": 1,
+      "participant_a_id": 1,
+      "participant_b_id": 2,
+      "signal_kind": "text",
+      "value": 0
+    },
+    {
+      "id": 2,
+      "snapshot_id": 1,
+      "participant_a_id": 1,
+      "participant_b_id": 2,
+      "signal_kind": "coactivity",
+      "value": 1
+    },
+    {
+      "id": 3,
+      "snapshot_id": 1,
+      "participant_a_id": 1,
+      "participant_b_id": 2,
+      "signal_kind": "cosharing",
+      "value": 0
+    }
+  ],
+  "evidence": [],
+  "findings": [],
+  "finding_members": []
+}

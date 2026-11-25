@@ -4,6 +4,14 @@ import { detectionProfiles, sources } from '@/db/schema';
 
 export type DetectionProfileValues = Omit<typeof detectionProfiles.$inferInsert, 'id' | 'name'>;
 
+export function listDetectionProfiles(database: AppDatabase) {
+  return database
+    .select({ id: detectionProfiles.id, name: detectionProfiles.name })
+    .from(detectionProfiles)
+    .orderBy(detectionProfiles.id)
+    .all();
+}
+
 export function findSourceProfile(database: AppDatabase, sourceId: number) {
   return database
     .select({ profile: detectionProfiles })

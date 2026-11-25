@@ -2,6 +2,7 @@ import { eq, sql } from 'drizzle-orm';
 import type { AppDatabase } from '@/db/connection';
 import { detectionProfiles, messages, participants, sources } from '@/db/schema';
 import { normalizeText } from '@/lib/normalize-text';
+import type { ChatLog } from '@/upload/chat-log';
 
 export type IncomingMessage = {
   sourceId: number;
@@ -50,6 +51,33 @@ export function findTelegramSourceId(database: AppDatabase, chatId: number) {
     .get();
 
   return source?.id;
+}
+
+export function saveUploadedChatLog(database: AppDatabase, chatLog: ChatLog, profileId: number) {
+  // better-sqlite3 turns the nested transaction in saveIncomingMessage into a savepoint
+  return database.transaction(() => {
+    const sourceId = database
+      .insert(sources)
+      .values({ kind: 'upload', title: chatLog.sourceName, profileId })
+      .returning({ id: sources.id })
+      .get().id;
+
+    // Sorted so that each participant gets the time of their earliest message as first_seen_at
+    const messagesInTimeOrder = chatLog.messages.toSorted(
+      (first, second) => first.at.getTime() - second.at.getTime(),
+    );
+    for (const message of messagesInTimeOrder) {
+      saveIncomingMessage(database, {
+        sourceId,
+        externalId: message.author,
+        displayName: message.author,
+        sentAt: message.at,
+        text: message.text,
+      });
+    }
+
+    return sourceId;
+  });
 }
 
 export function saveIncomingMessage(database: AppDatabase, message: IncomingMessage) {

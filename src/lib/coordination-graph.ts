@@ -17,20 +17,31 @@ export type CoordinationGraphData = {
   links: CoordinationGraphLink[];
 };
 
+const NO_GROUP = 0;
+
 export function buildCoordinationGraph(
   groups: SourceLiveData['groups'],
   pairs: SourceLiveData['pairs'],
   edgeThreshold: number,
 ): CoordinationGraphData {
-  const groupByParticipantName = new Map<string, number>();
+  const groupByParticipantId = new Map<number, number>();
   for (const group of groups) {
-    for (const memberName of group.memberNames) {
-      groupByParticipantName.set(memberName, group.id);
+    for (const memberId of group.memberIds) {
+      groupByParticipantId.set(memberId, group.id);
     }
   }
 
-  const nodeNames = new Set<string>();
+  // Nodes are keyed by participant id, because different people in a chat can share a name
+  const nodesByParticipantId = new Map<number, CoordinationGraphNode>();
   const links: CoordinationGraphLink[] = [];
+
+  function addNode(participantId: number, name: string) {
+    nodesByParticipantId.set(participantId, {
+      id: String(participantId),
+      name,
+      group: groupByParticipantId.get(participantId) ?? NO_GROUP,
+    });
+  }
 
   for (const pair of pairs) {
     const isGraphEdge = pair.score >= edgeThreshold;
@@ -38,20 +49,14 @@ export function buildCoordinationGraph(
       continue;
     }
 
-    nodeNames.add(pair.participantAName);
-    nodeNames.add(pair.participantBName);
+    addNode(pair.participantAId, pair.participantAName);
+    addNode(pair.participantBId, pair.participantBName);
     links.push({
-      source: pair.participantAName,
-      target: pair.participantBName,
+      source: String(pair.participantAId),
+      target: String(pair.participantBId),
       value: pair.score,
     });
   }
 
-  const nodes: CoordinationGraphNode[] = [...nodeNames].map((name) => ({
-    id: name,
-    name,
-    group: groupByParticipantName.get(name) ?? 0,
-  }));
-
-  return { nodes, links };
+  return { nodes: [...nodesByParticipantId.values()], links };
 }

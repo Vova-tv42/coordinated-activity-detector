@@ -31,11 +31,14 @@ type SignalKind = (typeof SIGNAL_KINDS)[number];
 type SnapshotGroupView = {
   id: number;
   score: number;
+  memberIds: number[];
   memberNames: string[];
 };
 
 type SnapshotPairView = {
   key: string;
+  participantAId: number;
+  participantBId: number;
   participantAName: string;
   participantBName: string;
   signals: Record<SignalKind, number>;
@@ -206,6 +209,7 @@ export function listSnapshotGroups(database: AppDatabase, snapshotId: number) {
     .select({
       groupId: snapshotGroups.id,
       score: snapshotGroups.score,
+      memberId: participants.id,
       memberName: participants.displayName,
     })
     .from(snapshotGroups)
@@ -220,8 +224,10 @@ export function listSnapshotGroups(database: AppDatabase, snapshotId: number) {
     const group = groupsById.get(row.groupId) ?? {
       id: row.groupId,
       score: row.score,
+      memberIds: [],
       memberNames: [],
     };
+    group.memberIds.push(row.memberId);
     group.memberNames.push(row.memberName);
     groupsById.set(row.groupId, group);
   }
@@ -256,6 +262,8 @@ export function listSnapshotPairs(
     const key = createGroupKey([row.participantAId, row.participantBId]);
     const pair = pairsByKey.get(key) ?? {
       key,
+      participantAId: row.participantAId,
+      participantBId: row.participantBId,
       participantAName: row.participantAName,
       participantBName: row.participantBName,
       signals: { text: 0, coactivity: 0, cosharing: 0 },

@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { CoordinationGraph } from '@/components/coordination-graph';
 import { SourceKindBadge } from '@/components/source-kind-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { SourceLiveData } from '@/db/snapshots';
+import { buildCoordinationGraph } from '@/lib/coordination-graph';
 import { formatDateTime, formatScore } from '@/lib/format';
 
 const LIVE_POLL_INTERVAL_MS = 5000;
@@ -34,6 +36,11 @@ export function SourceLiveView({ initialData }: SourceLiveViewProps) {
   const [liveData, setLiveData] = useState(initialData);
   const { source, thresholds, snapshot, groups, pairs, recentMessages } = liveData;
   const isLiveSource = source.kind === 'telegram' && source.isActive;
+  const graphData = useMemo(
+    () => buildCoordinationGraph(groups, pairs, thresholds.edgeThreshold),
+    [groups, pairs, thresholds.edgeThreshold],
+  );
+  const hasGraphLinks = graphData.links.length > 0;
 
   useEffect(() => {
     setLiveData(initialData);
@@ -130,6 +137,23 @@ export function SourceLiveView({ initialData }: SourceLiveViewProps) {
                 ))}
               </TableBody>
             </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Граф координації</CardTitle>
+          <CardDescription>
+            Вузли розфарбовані за групами, ширина ребра відповідає скору пари від{' '}
+            {formatScore(thresholds.edgeThreshold)}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {hasGraphLinks ? (
+            <CoordinationGraph graphData={graphData} />
+          ) : (
+            <p className="text-muted-foreground">Зв&apos;язків для побудови графа немає.</p>
           )}
         </CardContent>
       </Card>

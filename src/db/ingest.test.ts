@@ -7,6 +7,7 @@ import {
   type IncomingMessage,
   registerTelegramSource,
   saveIncomingMessage,
+  saveUploadedChatLog,
 } from '@/db/ingest';
 import { detectionProfiles, messages, participants, sources } from '@/db/schema';
 
@@ -99,6 +100,107 @@ describe('ingest', () => {
       saveIncomingMessage(database, createMessage({ tgMessageId: undefined }));
 
       expect(database.select().from(messages).all()).toHaveLength(2);
+    });
+  });
+
+  describe('saveUploadedChatLog', () => {
+    const DEFAULT_PROFILE_ID = 1;
+
+    it('створює джерело типу upload з назвою з файлу і вибраним профілем', () => {
+      const uploadedSourceId = saveUploadedChatLog(
+        database,
+        { sourceName: 'Демо-чат', messages: [] },
+        DEFAULT_PROFILE_ID,
+      );
+
+      const uploadedSource = database
+        .select()
+        .from(sources)
+        .where(eq(sources.id, uploadedSourceId))
+        .get();
+      expect(uploadedSource).toMatchObject({
+        kind: 'upload',
+        title: 'Демо-чат',
+        tgChatId: null,
+        profileId: DEFAULT_PROFILE_ID,
+      });
+    });
+
+    it('зберігає повідомлення і рахує учасників за іменем автора', () => {
+      const uploadedSourceId = saveUploadedChatLog(
+        database,
+        {
+          sourceName: 'Демо-чат',
+          messages: [
+            { author: 'bob', at: new Date('2026-09-10T12:02:00Z'), text: 'Друге від bob' },
+            { author: 'alice', at: new Date('2026-09-10T12:01:00Z'), text: 'Привіт, СВІТ!' },
+            { author: 'bob', at: new Date('2026-09-10T12:00:00Z'), text: 'Перше від bob' },
+          ],
+        },
+        DEFAULT_PROFILE_ID,
+      );
+
+      const uploadedParticipants = database
+        .select()
+        .from(participants)
+        .where(eq(participants.sourceId, uploadedSourceId))
+        .orderBy(participants.id)
+        .all();
+      expect(uploadedParticipants).toEqual([
+        expect.objectContaining({
+          externalId: 'bob',
+          displayName: 'bob',
+          firstSeenAt: new Date('2026-09-10T12:00:00Z'),
+          messageCount: 2,
+        }),
+        expect.objectContaining({
+          externalId: 'alice',
+          firstSeenAt: new Date('2026-09-10T12:01:00Z'),
+          messageCount: 1,
+        }),
+      ]);
+
+      const uploadedMessages = database
+        .select()
+        .from(messages)
+        .where(eq(messages.sourceId, uploadedSourceId))
+        .orderBy(messages.id)
+        .all();
+      expect(uploadedMessages).toHaveLength(3);
+      expect(uploadedMessages.every((message) => message.tgMessageId === null)).toBe(true);
+      expect(uploadedMessages[1]).toMatchObject({
+        text: 'Привіт, СВІТ!',
+        normalizedText: 'привіт світ',
+      });
+    });
+
+    it('кожне завантаження створює нове джерело навіть з тією самою назвою', () => {
+      const chatLog = {
+        sourceName: 'Демо-чат',
+        messages: [{ author: 'alice', at: new Date('2026-09-10T12:00:00Z'), text: 'Привіт' }],
+      };
+
+      const firstSourceId = saveUploadedChatLog(database, chatLog, DEFAULT_PROFILE_ID);
+      const secondSourceId = saveUploadedChatLog(database, chatLog, DEFAULT_PROFILE_ID);
+
+      expect(secondSourceId).not.toBe(firstSourceId);
+      expect(database.select().from(messages).all()).toHaveLength(2);
+    });
+
+    it('не залишає джерело без повідомлень, якщо профілю не існує', () => {
+      const missingProfileId = 999;
+
+      expect(() =>
+        saveUploadedChatLog(
+          database,
+          {
+            sourceName: 'Демо-чат',
+            messages: [{ author: 'alice', at: new Date('2026-09-10T12:00:00Z'), text: 'Привіт' }],
+          },
+          missingProfileId,
+        ),
+      ).toThrow();
+      expect(database.select().from(sources).all()).toHaveLength(1);
     });
   });
 

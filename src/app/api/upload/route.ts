@@ -1,6 +1,7 @@
 import { getDatabase } from '@/db/connection';
 import { saveUploadedChatLog } from '@/db/ingest';
 import { listDetectionProfiles } from '@/db/profiles';
+import { analyzeSourceTimeline } from '@/db/timeline';
 import {
   MAX_CHAT_LOG_FILE_SIZE_BYTES,
   MAX_CHAT_LOG_FILE_SIZE_MB,
@@ -45,5 +46,6 @@ export async function POST(request: Request) {
   }
 
   const sourceId = saveUploadedChatLog(database, result.chatLog, profileId);
+  analyzeSourceTimeline(database, sourceId);
   return Response.json({ sourceId } satisfies UploadResponseBody, { status: 201 });
 }

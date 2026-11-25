@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { POST } from '@/app/api/upload/route';
 import { type AppDatabase, getDatabase } from '@/db/connection';
-import { messages, sources } from '@/db/schema';
+import { messages, snapshots, sources, windowMetrics } from '@/db/schema';
 import { createTestDatabase } from '@/db/test-database';
 import { MAX_CHAT_LOG_FILE_SIZE_BYTES } from '@/upload/chat-log';
 
@@ -59,6 +59,20 @@ describe('POST /api/upload', () => {
     expect(await response.json()).toEqual({ sourceId: savedSource?.id });
     expect(savedSource).toMatchObject({ kind: 'upload', title: 'Демо-чат', profileId: 1 });
     expect(database.select().from(messages).all()).toHaveLength(2);
+  });
+
+  it('одразу аналізує завантажений лог ковзним вікном і будує таймлайн', async () => {
+    await POST(
+      createUploadRequest({
+        file: createJsonFile(JSON.stringify(validChatLog)),
+        profileId: DEFAULT_PROFILE_ID,
+      }),
+    );
+
+    expect(database.select().from(snapshots).all()).toHaveLength(1);
+    expect(database.select().from(windowMetrics).all()).toEqual([
+      expect.objectContaining({ groupCount: expect.any(Number), maxScore: expect.any(Number) }),
+    ]);
   });
 
   it('повертає помилки валідації українською і нічого не зберігає', async () => {

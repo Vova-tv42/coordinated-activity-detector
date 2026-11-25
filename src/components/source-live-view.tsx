@@ -22,23 +22,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { SourceLiveData } from '@/db/snapshots';
+import { formatDateTime, formatScore } from '@/lib/format';
 
 const LIVE_POLL_INTERVAL_MS = 5000;
-const SCORE_FRACTION_DIGITS = 2;
-
-const sentAtFormat = new Intl.DateTimeFormat('uk-UA', {
-  dateStyle: 'short',
-  timeStyle: 'medium',
-  timeZone: 'Europe/Kyiv',
-});
-
-function formatScore(score: number) {
-  return score.toFixed(SCORE_FRACTION_DIGITS);
-}
-
-function formatDateTime(isoDate: string) {
-  return sentAtFormat.format(new Date(isoDate));
-}
 
 type SourceLiveViewProps = {
   initialData: SourceLiveData;
@@ -125,6 +111,7 @@ export function SourceLiveView({ initialData }: SourceLiveViewProps) {
                 <TableRow>
                   <TableHead>Учасники групи</TableHead>
                   <TableHead className="text-right">Скор</TableHead>
+                  <TableHead className="text-right">Докази</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -134,6 +121,11 @@ export function SourceLiveView({ initialData }: SourceLiveViewProps) {
                       {group.memberNames.join(', ')}
                     </TableCell>
                     <TableCell className="text-right">{formatScore(group.score)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/sources/${source.id}/evidence/${group.id}`}>Переглянути</Link>
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

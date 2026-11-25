@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, isNotNull, lte } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNotNull, lte } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import type { AppDatabase } from '@/db/connection';
 import { findSourceProfile } from '@/db/profiles';
@@ -12,6 +12,7 @@ import {
   participants,
   snapshotGroups,
   snapshots,
+  sources,
 } from '@/db/schema';
 import { findSource, listRecentMessages } from '@/db/sources';
 import {
@@ -330,6 +331,137 @@ export function loadSourceLiveData(database: AppDatabase, sourceId: number): Sou
     recentMessages: recentMessages.map((message) => ({
       ...message,
       sentAt: message.sentAt.toISOString(),
+    })),
+  };
+}
+
+export type GroupEvidenceMessage = {
+  id: number;
+  authorName: string;
+  sentAt: string;
+  text: string;
+};
+
+export type GroupEvidencePair = {
+  id: number;
+  messageA: GroupEvidenceMessage;
+  messageB: GroupEvidenceMessage;
+};
+
+export type GroupEvidenceData = {
+  source: {
+    id: number;
+    title: string;
+    kind: 'telegram' | 'upload';
+  };
+  group: {
+    id: number;
+    score: number;
+    computedAt: string;
+    memberNames: string[];
+  };
+  evidencePairs: GroupEvidencePair[];
+};
+
+export function loadGroupEvidence(
+  database: AppDatabase,
+  sourceId: number,
+  groupId: number,
+): GroupEvidenceData | null {
+  const groupRow = database
+    .select({
+      groupId: snapshotGroups.id,
+      snapshotId: snapshotGroups.snapshotId,
+      score: snapshotGroups.score,
+      computedAt: snapshots.computedAt,
+      sourceId: sources.id,
+      sourceTitle: sources.title,
+      sourceKind: sources.kind,
+    })
+    .from(snapshotGroups)
+    .innerJoin(snapshots, eq(snapshots.id, snapshotGroups.snapshotId))
+    .innerJoin(sources, eq(sources.id, snapshots.sourceId))
+    .where(and(eq(snapshotGroups.id, groupId), eq(sources.id, sourceId)))
+    .get();
+
+  if (!groupRow) {
+    return null;
+  }
+
+  const memberRows = database
+    .select({
+      participantId: participants.id,
+      displayName: participants.displayName,
+    })
+    .from(groupMembers)
+    .innerJoin(participants, eq(participants.id, groupMembers.participantId))
+    .where(eq(groupMembers.snapshotGroupId, groupId))
+    .orderBy(asc(participants.displayName))
+    .all();
+
+  const memberIds = memberRows.map((member) => member.participantId);
+  const messageA = alias(messages, 'message_a');
+  const messageB = alias(messages, 'message_b');
+  const participantA = alias(participants, 'participant_a');
+  const participantB = alias(participants, 'participant_b');
+
+  const evidenceRows =
+    memberIds.length === 0
+      ? []
+      : database
+          .select({
+            id: evidence.id,
+            messageAId: messageA.id,
+            messageAAuthorName: participantA.displayName,
+            messageASentAt: messageA.sentAt,
+            messageAText: messageA.text,
+            messageBId: messageB.id,
+            messageBAuthorName: participantB.displayName,
+            messageBSentAt: messageB.sentAt,
+            messageBText: messageB.text,
+          })
+          .from(evidence)
+          .innerJoin(pairSignals, eq(pairSignals.id, evidence.pairSignalId))
+          .innerJoin(messageA, eq(messageA.id, evidence.messageAId))
+          .innerJoin(participantA, eq(participantA.id, messageA.participantId))
+          .innerJoin(messageB, eq(messageB.id, evidence.messageBId))
+          .innerJoin(participantB, eq(participantB.id, messageB.participantId))
+          .where(
+            and(
+              eq(pairSignals.snapshotId, groupRow.snapshotId),
+              inArray(pairSignals.participantAId, memberIds),
+              inArray(pairSignals.participantBId, memberIds),
+            ),
+          )
+          .orderBy(asc(messageA.sentAt), asc(messageB.sentAt), asc(evidence.id))
+          .all();
+
+  return {
+    source: {
+      id: groupRow.sourceId,
+      title: groupRow.sourceTitle,
+      kind: groupRow.sourceKind,
+    },
+    group: {
+      id: groupRow.groupId,
+      score: groupRow.score,
+      computedAt: groupRow.computedAt.toISOString(),
+      memberNames: memberRows.map((member) => member.displayName),
+    },
+    evidencePairs: evidenceRows.map((row) => ({
+      id: row.id,
+      messageA: {
+        id: row.messageAId,
+        authorName: row.messageAAuthorName,
+        sentAt: row.messageASentAt.toISOString(),
+        text: row.messageAText,
+      },
+      messageB: {
+        id: row.messageBId,
+        authorName: row.messageBAuthorName,
+        sentAt: row.messageBSentAt.toISOString(),
+        text: row.messageBText,
+      },
     })),
   };
 }

@@ -183,6 +183,8 @@ export function analyzeSource(database: AppDatabase, sourceId: number, windowEnd
         .run();
     }
   });
+
+  return { windowStart, analysis };
 }
 
 export function findLatestSnapshot(database: AppDatabase, sourceId: number) {

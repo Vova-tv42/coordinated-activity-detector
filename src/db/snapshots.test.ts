@@ -329,6 +329,7 @@ describe('analyzeSource', () => {
         {
           id: expect.any(Number),
           score: expect.any(Number),
+          memberIds: [expect.any(Number), expect.any(Number), expect.any(Number)],
           memberNames: ['bot1', 'bot2', 'bot3'],
         },
       ]);

@@ -20,6 +20,7 @@ import {
   findLatestSnapshot,
   listSnapshotGroups,
   listSnapshotPairs,
+  loadGroupEvidence,
 } from '@/db/snapshots';
 import {
   analyzeCoordinationFromMessages,
@@ -361,6 +362,74 @@ describe('analyzeSource', () => {
       });
 
       expect(topPair.score).toBe(topPair.signals.text);
+    });
+
+    it('повертає докази по групі зі схожими парами повідомлень', () => {
+      const snapshot = analyzeFarm();
+      const [group] = listSnapshotGroups(database, snapshot.id);
+
+      const groupEvidence = loadGroupEvidence(database, sourceId, group.id);
+
+      expect(groupEvidence).toMatchObject({
+        source: { id: sourceId, title: 'Тестова група', kind: 'telegram' },
+        group: {
+          id: group.id,
+          score: group.score,
+          computedAt: snapshot.computedAt.toISOString(),
+          memberNames: ['bot1', 'bot2', 'bot3'],
+        },
+      });
+      expect(groupEvidence?.evidencePairs.length).toBeGreaterThan(0);
+      expect(groupEvidence?.evidencePairs[0]).toMatchObject({
+        id: expect.any(Number),
+        messageA: {
+          id: expect.any(Number),
+          authorName: expect.any(String),
+          sentAt: expect.any(String),
+          text: expect.any(String),
+        },
+        messageB: {
+          id: expect.any(Number),
+          authorName: expect.any(String),
+          sentAt: expect.any(String),
+          text: expect.any(String),
+        },
+      });
+    });
+
+    it('повертає null, якщо група не існує або належить іншому джерелу', () => {
+      const snapshot = analyzeFarm();
+      const [group] = listSnapshotGroups(database, snapshot.id);
+      const otherSourceId = database
+        .insert(sources)
+        .values({ kind: 'upload', title: 'Інше джерело', profileId: 1 })
+        .returning()
+        .get().id;
+
+      expect(loadGroupEvidence(database, sourceId, 999)).toBeNull();
+      expect(loadGroupEvidence(database, otherSourceId, group.id)).toBeNull();
+    });
+
+    it('повертає порожній список пар для групи без текстових доказів', () => {
+      saveMessages(quietChat.messages.slice(0, 2));
+      const [firstId, secondId] = database
+        .select({ id: participants.id })
+        .from(participants)
+        .all()
+        .map((participant) => participant.id);
+      vi.mocked(analyzeCoordinationFromMessages).mockReturnValueOnce(
+        createAnalysisWithPair(createScoredPair(firstId, secondId)),
+      );
+      analyzeSource(database, sourceId, WINDOW_END);
+      const snapshot = findLatestSnapshot(database, sourceId);
+      if (!snapshot) {
+        throw new Error('Snapshot was not saved');
+      }
+      const [group] = listSnapshotGroups(database, snapshot.id);
+
+      const groupEvidence = loadGroupEvidence(database, sourceId, group.id);
+
+      expect(groupEvidence?.evidencePairs).toEqual([]);
     });
   });
 });

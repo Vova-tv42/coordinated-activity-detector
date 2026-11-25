@@ -13,6 +13,7 @@ import {
   snapshotGroups,
   snapshots,
 } from '@/db/schema';
+import { findSource, listRecentMessages } from '@/db/sources';
 import {
   analyzeCoordinationFromMessages,
   calculatePairScore,
@@ -21,6 +22,7 @@ import {
 } from '@/detection/detectors';
 
 const MS_IN_MINUTE = 60_000;
+const RECENT_MESSAGES_LIMIT = 100;
 const SIGNAL_KINDS = ['text', 'coactivity', 'cosharing'] as const;
 
 type SignalKind = (typeof SIGNAL_KINDS)[number];
@@ -272,4 +274,62 @@ export function listSnapshotPairs(
       ),
     }))
     .sort((pairA, pairB) => pairB.score - pairA.score);
+}
+
+export type SourceLiveData = {
+  source: {
+    id: number;
+    title: string;
+    kind: 'telegram' | 'upload';
+    isActive: boolean;
+  };
+  thresholds: {
+    keepThreshold: number;
+    edgeThreshold: number;
+  };
+  snapshot: {
+    id: number;
+    computedAt: string;
+  } | null;
+  groups: SnapshotGroupView[];
+  pairs: Array<SnapshotPairView & { score: number }>;
+  recentMessages: Array<{
+    id: number;
+    sentAt: string;
+    text: string;
+    authorName: string;
+  }>;
+};
+
+export function loadSourceLiveData(database: AppDatabase, sourceId: number): SourceLiveData | null {
+  const source = findSource(database, sourceId);
+  const profile = findSourceProfile(database, sourceId);
+  if (!source || !profile) {
+    return null;
+  }
+
+  const snapshot = findLatestSnapshot(database, source.id);
+  const groups = snapshot ? listSnapshotGroups(database, snapshot.id) : [];
+  const pairs = snapshot ? listSnapshotPairs(database, snapshot.id, profile) : [];
+  const recentMessages = listRecentMessages(database, source.id, RECENT_MESSAGES_LIMIT);
+
+  return {
+    source,
+    thresholds: {
+      keepThreshold: profile.keepThreshold,
+      edgeThreshold: profile.edgeThreshold,
+    },
+    snapshot: snapshot
+      ? {
+          id: snapshot.id,
+          computedAt: snapshot.computedAt.toISOString(),
+        }
+      : null,
+    groups,
+    pairs,
+    recentMessages: recentMessages.map((message) => ({
+      ...message,
+      sentAt: message.sentAt.toISOString(),
+    })),
+  };
 }

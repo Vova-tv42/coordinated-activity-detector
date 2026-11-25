@@ -83,6 +83,7 @@ describe('sources', () => {
         id: groupId,
         title: 'Тестова група',
         kind: 'telegram',
+        isActive: true,
       });
     });
 

@@ -22,7 +22,12 @@ export function listSourcesWithCounts(database: AppDatabase) {
 
 export function findSource(database: AppDatabase, sourceId: number) {
   return database
-    .select({ id: sources.id, title: sources.title, kind: sources.kind })
+    .select({
+      id: sources.id,
+      title: sources.title,
+      kind: sources.kind,
+      isActive: sources.isActive,
+    })
     .from(sources)
     .where(eq(sources.id, sourceId))
     .get();

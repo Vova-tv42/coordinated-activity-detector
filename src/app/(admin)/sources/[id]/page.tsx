@@ -5,6 +5,7 @@ import { SourceLiveView } from '@/components/source-live-view';
 import { Button } from '@/components/ui/button';
 import { getDatabase } from '@/db/connection';
 import { loadSourceLiveData } from '@/db/snapshots';
+import { listWindowMetrics } from '@/db/timeline';
 
 async function SourceDetails({ params }: Pick<PageProps<'/sources/[id]'>, 'params'>) {
   const { id } = await params;
@@ -13,12 +14,19 @@ async function SourceDetails({ params }: Pick<PageProps<'/sources/[id]'>, 'param
     notFound();
   }
 
-  const liveData = loadSourceLiveData(getDatabase(), Number(id));
+  const database = getDatabase();
+  const liveData = loadSourceLiveData(database, Number(id));
   if (!liveData) {
     notFound();
   }
 
-  return <SourceLiveView initialData={liveData} />;
+  const timeline = listWindowMetrics(database, liveData.source.id).map((windowMetric) => ({
+    windowEnd: windowMetric.windowEnd.toISOString(),
+    maxScore: windowMetric.maxScore,
+    flaggedParticipants: windowMetric.flaggedParticipants,
+  }));
+
+  return <SourceLiveView initialData={liveData} timeline={timeline} />;
 }
 
 export default function SourcePage({ params }: PageProps<'/sources/[id]'>) {

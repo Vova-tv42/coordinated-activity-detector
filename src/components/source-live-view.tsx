@@ -3,6 +3,10 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { CoordinationGraph } from '@/components/coordination-graph';
+import {
+  CoordinationTimeline,
+  type CoordinationTimelinePoint,
+} from '@/components/coordination-timeline';
 import { SourceKindBadge } from '@/components/source-kind-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,9 +34,10 @@ const LIVE_POLL_INTERVAL_MS = 5000;
 
 type SourceLiveViewProps = {
   initialData: SourceLiveData;
+  timeline: CoordinationTimelinePoint[];
 };
 
-export function SourceLiveView({ initialData }: SourceLiveViewProps) {
+export function SourceLiveView({ initialData, timeline }: SourceLiveViewProps) {
   const [liveData, setLiveData] = useState(initialData);
   const { source, thresholds, snapshot, groups, pairs, recentMessages } = liveData;
   const isLiveSource = source.kind === 'telegram' && source.isActive;
@@ -41,6 +46,7 @@ export function SourceLiveView({ initialData }: SourceLiveViewProps) {
     [groups, pairs, thresholds.edgeThreshold],
   );
   const hasGraphLinks = graphData.links.length > 0;
+  const hasTimeline = timeline.length > 0;
 
   useEffect(() => {
     setLiveData(initialData);
@@ -157,6 +163,21 @@ export function SourceLiveView({ initialData }: SourceLiveViewProps) {
           )}
         </CardContent>
       </Card>
+
+      {hasTimeline && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Таймлайн координації</CardTitle>
+            <CardDescription>
+              Лог проаналізовано ковзним вікном від першого до останнього повідомлення. Точка
+              графіка - результат вікна, що закінчується в цей момент.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CoordinationTimeline timeline={timeline} />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

@@ -12,7 +12,9 @@ export function resolveDatabasePath() {
 }
 
 export function openDatabase(databasePath: string) {
-  mkdirSync(dirname(databasePath), { recursive: true });
+  if (databasePath !== ':memory:') {
+    mkdirSync(dirname(databasePath), { recursive: true });
+  }
 
   const sqlite = new Database(databasePath);
   sqlite.pragma('journal_mode = WAL');

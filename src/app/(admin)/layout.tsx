@@ -15,6 +15,9 @@ export default function AdminLayout({ children }: LayoutProps<'/'>) {
             <Link href="/upload">Завантажити лог</Link>
           </Button>
           <Button variant="ghost" asChild>
+            <Link href="/metrics">Метрики</Link>
+          </Button>
+          <Button variant="ghost" asChild>
             <Link href="/admins">Адміністратори</Link>
           </Button>
           <SignOutButton />

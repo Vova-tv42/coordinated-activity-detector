@@ -1,5 +1,6 @@
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import type { CoordinationTimelinePoint } from '@/components/coordination-timeline';
 import { SourceLiveView } from '@/components/source-live-view';
 import type { SourceLiveData } from '@/db/snapshots';
 
@@ -22,15 +23,34 @@ const sourceWithGroup: SourceLiveData = {
   recentMessages: [],
 };
 
+const uploadTimeline: CoordinationTimelinePoint[] = [
+  { windowEnd: '2026-11-25T12:05:00.000Z', maxScore: 0, flaggedParticipants: 0 },
+  { windowEnd: '2026-11-25T12:10:00.000Z', maxScore: 0.8, flaggedParticipants: 2 },
+];
+
 describe('SourceLiveView', () => {
   it('рендериться на сервері разом з карткою графа, без доступу до window', () => {
     // Direct opening or reloading the page renders it on the server, where window does not exist
     const isServerEnvironment = typeof (globalThis as { window?: unknown }).window === 'undefined';
 
-    const html = renderToString(<SourceLiveView initialData={sourceWithGroup} />);
+    const html = renderToString(<SourceLiveView initialData={sourceWithGroup} timeline={[]} />);
 
     expect(isServerEnvironment).toBe(true);
     expect(html).toContain('Граф координації');
     expect(html).toContain('Завантаження графа...');
+  });
+
+  it('показує таймлайн координації, коли для джерела є результати вікон', () => {
+    const html = renderToString(
+      <SourceLiveView initialData={sourceWithGroup} timeline={uploadTimeline} />,
+    );
+
+    expect(html).toContain('Таймлайн координації');
+  });
+
+  it('не показує таймлайн, коли джерело ще не аналізувалось ковзним вікном', () => {
+    const html = renderToString(<SourceLiveView initialData={sourceWithGroup} timeline={[]} />);
+
+    expect(html).not.toContain('Таймлайн координації');
   });
 });

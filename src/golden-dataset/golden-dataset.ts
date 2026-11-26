@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { z } from 'zod';
 import { type ChatLog, parseChatLog } from '@/upload/chat-log';
 
-const GOLDEN_DATASET_DIRECTORY = new URL('./', import.meta.url);
+const GOLDEN_DATASET_DIRECTORY = join(process.cwd(), 'src/golden-dataset');
 const MIN_GROUP_SIZE = 2;
 
 // Ground Truth lists coordinated groups by message author; extra keys are ignored on upload
@@ -17,7 +18,7 @@ export type GoldenDatasetEntry = {
 };
 
 export function loadGoldenDatasetEntry(fileName: string): GoldenDatasetEntry {
-  const fileContent = readFileSync(new URL(fileName, GOLDEN_DATASET_DIRECTORY), 'utf8');
+  const fileContent = readFileSync(join(GOLDEN_DATASET_DIRECTORY, fileName), 'utf8');
 
   const parsedChatLog = parseChatLog(fileContent);
   if (!parsedChatLog.success) {
